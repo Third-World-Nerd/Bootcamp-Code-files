@@ -1,4 +1,3 @@
-// Solution to the LED Car Arrangment Problem
 #include <WiFi.h>
 #include <WebServer.h>
 
@@ -14,6 +13,40 @@ WebServer server(80);
 #define PIN_26 26
 #define PIN_27 27
 
+// ===== Motor control functions =====
+void stopAll() {
+  digitalWrite(PIN_14, LOW);
+  digitalWrite(PIN_25, LOW);
+  digitalWrite(PIN_26, LOW);
+  digitalWrite(PIN_27, LOW);
+}
+
+void forward() {
+  stopAll();
+  digitalWrite(PIN_14, HIGH);
+  digitalWrite(PIN_26, HIGH);
+}
+
+void backward() {
+  stopAll();
+  digitalWrite(PIN_27, HIGH);
+  digitalWrite(PIN_25, HIGH);
+}
+
+void left() {
+  stopAll();
+  digitalWrite(PIN_14, HIGH);
+  digitalWrite(PIN_27, HIGH);
+}
+
+void right() {
+  stopAll();
+  digitalWrite(PIN_26, HIGH);
+  digitalWrite(PIN_25, HIGH);
+}
+
+// ===================================
+
 void setup() {
   Serial.begin(115200);
 
@@ -22,12 +55,9 @@ void setup() {
   pinMode(PIN_26, OUTPUT);
   pinMode(PIN_27, OUTPUT);
 
-  // Initialize all pins LOW
-  digitalWrite(PIN_14, LOW);
-  digitalWrite(PIN_25, LOW);
-  digitalWrite(PIN_26, LOW);
-  digitalWrite(PIN_27, LOW);
+  stopAll(); // Make sure motors are off at start
 
+  // Connect to WiFi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -37,36 +67,21 @@ void setup() {
   Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 
+  // Route for controlling motors
   server.on("/control", []() {
     String cmd = server.arg("cmd");
 
-    // Turn all pins LOW initially
-    digitalWrite(PIN_14, LOW);
-    digitalWrite(PIN_25, LOW);
-    digitalWrite(PIN_26, LOW);
-    digitalWrite(PIN_27, LOW);
-
-    if (cmd == "w") {
-      digitalWrite(PIN_14, HIGH);
-      digitalWrite(PIN_26, HIGH);
-      
-    } else if (cmd == "s") {
-      digitalWrite(PIN_27, HIGH);
-      digitalWrite(PIN_25, HIGH);
-      
-    } else if (cmd == "a") {
-      digitalWrite(PIN_14, HIGH);
-      digitalWrite(PIN_27, HIGH);
-      
-    } else if (cmd == "d") {
-      digitalWrite(PIN_26, HIGH);
-      digitalWrite(PIN_25, HIGH);
-    } else if (cmd == "x") {
-      // Stop all, keep all LOW
-      server.send(200, "text/plain", "All pins OFF");
-    } else {
+    if (cmd == "w") forward();
+    else if (cmd == "s") backward();
+    else if (cmd == "a") left();
+    else if (cmd == "d") right();
+    else if (cmd == "x") stopAll();
+    else {
       server.send(200, "text/plain", "Unknown command");
+      return;
     }
+
+    server.send(200, "text/plain", "Command executed: " + cmd);
   });
 
   server.enableCORS(true);
