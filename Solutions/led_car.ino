@@ -49,19 +49,18 @@ void setup() {
     if (cmd == "w") {
       digitalWrite(PIN_14, HIGH);
       digitalWrite(PIN_26, HIGH);
-      server.send(200, "text/plain", "Pins 14 and 26 ON");
+      
     } else if (cmd == "s") {
       digitalWrite(PIN_27, HIGH);
       digitalWrite(PIN_25, HIGH);
-      server.send(200, "text/plain", "Pins 27 and 25 ON");
+      
     } else if (cmd == "a") {
       digitalWrite(PIN_14, HIGH);
       digitalWrite(PIN_27, HIGH);
-      server.send(200, "text/plain", "Pins 14 and 27 ON");
+      
     } else if (cmd == "d") {
       digitalWrite(PIN_26, HIGH);
       digitalWrite(PIN_25, HIGH);
-      server.send(200, "text/plain", "Pins 26 and 25 ON");
     } else if (cmd == "x") {
       // Stop all, keep all LOW
       server.send(200, "text/plain", "All pins OFF");
