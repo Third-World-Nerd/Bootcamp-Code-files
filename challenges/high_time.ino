@@ -20,7 +20,9 @@ void loop() {
       Serial.println(" seconds...");
       
       //Write your code here
-      ___
+      ___ // Turn the LED HIGH
+      ___ // Control the duration
+      ___ // Set the LED LOW
       
       Serial.println("LED OFF. Enter another number:");
     } else {
