@@ -5,20 +5,14 @@
 #include <WebServer.h>
 
 // ===== Wi-Fi Credentials =====
-const char* ssid = "my_phone";
-const char* password = "12345678";
+const char* ssid = "SOYAM_dhfibernet";
+const char* password = "6153@6153";
 
 // ===== Motor Pins =====
-#define ENA 14
-#define IN1 13
-#define IN2 12
-#define ENB 19
-#define IN3 32
-#define IN4 15
-
-// ===== Motor Speeds =====
-int high_motor_speed = 200; // 0-255
-int low_motor_speed  = 100; // 0-255
+#define PIN_14 14
+#define PIN_25 25
+#define PIN_26 26
+#define PIN_27 27
 
 // Web server on port 80
 WebServer server(80);
@@ -46,56 +40,46 @@ void get_ip_address() {
 }
 
 // Setup motor pins
-void setup_motor_pins() {
-  pinMode(ENA, OUTPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(ENB, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
+void setup_led_pins() {
+  pinMode(PIN_14, OUTPUT);
+  pinMode(PIN_25, OUTPUT);
+  pinMode(PIN_26, OUTPUT);
+  pinMode(PIN_27, OUTPUT);
 }
 
-// Motor control functions
+// ===== LED control functions =====
+void stopAll() {
+  digitalWrite(PIN_14, LOW);
+  digitalWrite(PIN_25, LOW);
+  digitalWrite(PIN_26, LOW);
+  digitalWrite(PIN_27, LOW);
+}
+
 void forward() {
-  analogWrite(ENA, high_motor_speed);
-  analogWrite(ENB, high_motor_speed);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
+  stopAll();
+  digitalWrite(PIN_14, HIGH);
+  digitalWrite(PIN_26, HIGH);
 }
 
 void backward() {
-  analogWrite(ENA, high_motor_speed);
-  analogWrite(ENB, high_motor_speed);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
+  stopAll();
+  digitalWrite(PIN_27, HIGH);
+  digitalWrite(PIN_25, HIGH);
 }
 
-void turnLeft() {
-  analogWrite(ENA, low_motor_speed);
-  analogWrite(ENB, high_motor_speed);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
+void left() {
+  stopAll();
+  digitalWrite(PIN_14, HIGH);
+  digitalWrite(PIN_27, HIGH);
 }
 
-void turnRight() {
-  analogWrite(ENA, high_motor_speed);
-  analogWrite(ENB, low_motor_speed);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
+void right() {
+  stopAll();
+  digitalWrite(PIN_26, HIGH);
+  digitalWrite(PIN_25, HIGH);
 }
 
-void stopMotors() {
-  analogWrite(ENA, 0);
-  analogWrite(ENB, 0);
-}
+// ================== SERVER ==================
 
 // Setup server route once
 void setup_server_command() {
@@ -112,13 +96,13 @@ void start_server() {
   server.begin();
 }
 
-// Call this in loop to handle requests
+// Handle incoming requests
 String get_server_command() {
   server.handleClient();
   return latest_command;
 }
 
-// Clear the stored command after processing
+// Clear the stored command
 void clear_command() {
   latest_command = "";
 }

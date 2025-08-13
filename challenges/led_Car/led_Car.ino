@@ -4,9 +4,11 @@ void setup() {
   Serial.begin(115200);
   // Set up connection led 
   //connect_to_wifi
+  connect_to_wifi();
   //get_ip_address
   //ask_server_for_input
   // start_communication_with_server
+  
 
 
 }
