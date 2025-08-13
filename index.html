@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Car Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .connection-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .connect-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .connect-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .status.connected {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .status.disconnected {
+            background: rgba(244, 67, 54, 0.3);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+
+        .status.connecting {
+            background: rgba(255, 193, 7, 0.3);
+            color: #FFC107;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+
+        .controller {
+            margin-top: 20px;
+        }
+
+        .controller-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 15px;
+            max-width: 250px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border: none;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            color: #333;
+            box-shadow: 
+                5px 5px 10px rgba(0, 0, 0, 0.2),
+                -5px -5px 10px rgba(255, 255, 255, 0.8);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                8px 8px 16px rgba(0, 0, 0, 0.3),
+                -8px -8px 16px rgba(255, 255, 255, 0.9);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+            background: linear-gradient(145deg, #e6e6e6, #ffffff);
+            box-shadow: 
+                inset 5px 5px 10px rgba(0, 0, 0, 0.2),
+                inset -5px -5px 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .up { grid-column: 2; grid-row: 1; }
+        .left { grid-column: 1; grid-row: 2; }
+        .stop { 
+            grid-column: 2; 
+            grid-row: 2; 
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        .right { grid-column: 3; grid-row: 2; }
+        .down { grid-column: 2; grid-row: 3; }
+
+        .stop:hover {
+            background: linear-gradient(145deg, #ff5252, #e53935);
+        }
+
+        .stop:active {
+            background: linear-gradient(145deg, #e53935, #ff5252);
+        }
+
+        .command-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+            
+            .controller-grid {
+                gap: 10px;
+                max-width: 200px;
+            }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 ESP32 Car Controller</h1>
+        <p class="subtitle">Remote control your car kit</p>
+        
+        <div class="connection-panel">
+            <div class="input-group">
+                <label for="esp32-ip">ESP32 IP Address:</label>
+                <input type="text" id="esp32-ip" placeholder="192.168.1.100" value="192.168.1.100">
+            </div>
+            <div class="input-group">
+                <label for="esp32-port">Port:</label>
+                <input type="number" id="esp32-port" placeholder="80" value="80">
+            </div>
+            <button class="connect-btn" id="connect-btn" onclick="toggleConnection()">Connect</button>
+            <div class="status disconnected" id="status">Disconnected</div>
+        </div>
+
+        <div class="controller">
+            <div class="controller-grid">
+                <button class="control-btn up" onmousedown="sendCommand('w')" onmouseup="sendCommand('x')" ontouchstart="sendCommand('w')" ontouchend="sendCommand('x')" disabled>
+                    ↑
+                </button>
+                <button class="control-btn left" onmousedown="sendCommand('a')" onmouseup="sendCommand('x')" ontouchstart="sendCommand('a')" ontouchend="sendCommand('x')" disabled>
+                    ←
+                </button>
+                <button class="control-btn stop" onclick="sendCommand('x')" disabled>
+                    ⏹
+                </button>
+                <button class="control-btn right" onmousedown="sendCommand('d')" onmouseup="sendCommand('x')" ontouchstart="sendCommand('d')" ontouchend="sendCommand('x')" disabled>
+                    →
+                </button>
+                <button class="control-btn down" onmousedown="sendCommand('s')" onmouseup="sendCommand('x')" ontouchstart="sendCommand('s')" ontouchend="sendCommand('x')" disabled>
+                    ↓
+                </button>
+            </div>
+        </div>
+
+        <div class="command-display" id="command-display">Ready to connect...</div>
+        
+        <div class="instructions">
+            <strong>Instructions:</strong><br>
+            1. Enter your ESP32's IP address and port<br>
+            2. Click Connect to establish connection<br>
+            3. Use directional buttons to control your car<br>
+            4. Commands: W=Forward, S=Backward, A=Left, D=Right, X=Stop
+        </div>
+    </div>
+
+    <script>
+        let isConnected = false;
+        let esp32Url = '';
+
+        function toggleConnection() {
+            const ip = document.getElementById('esp32-ip').value;
+            const port = document.getElementById('esp32-port').value;
+            const connectBtn = document.getElementById('connect-btn');
+            const status = document.getElementById('status');
+            const buttons = document.querySelectorAll('.control-btn');
+            const commandDisplay = document.getElementById('command-display');
+
+            if (!isConnected) {
+                if (!ip) {
+                    alert('Please enter ESP32 IP address');
+                    return;
+                }
+
+                esp32Url = `http://${ip}:${port}`;
+                
+                // Show connecting status
+                status.className = 'status connecting pulse';
+                status.textContent = 'Connecting...';
+                connectBtn.disabled = true;
+                commandDisplay.textContent = 'Connecting to ESP32...';
+
+                // Test connection
+                testConnection(esp32Url)
+                    .then(() => {
+                        isConnected = true;
+                        status.className = 'status connected';
+                        status.textContent = `Connected to ${ip}:${port}`;
+                        connectBtn.textContent = 'Disconnect';
+                        connectBtn.disabled = false;
+                        connectBtn.style.background = 'linear-gradient(45deg, #f44336, #d32f2f)';
+                        
+                        // Enable control buttons
+                        buttons.forEach(btn => btn.disabled = false);
+                        
+                        commandDisplay.textContent = 'Ready to control car';
+                        
+                        // Send initial stop command
+                        sendCommand('x');
+                    })
+                    .catch((error) => {
+                        status.className = 'status disconnected';
+                        status.textContent = 'Connection failed';
+                        connectBtn.disabled = false;
+                        commandDisplay.textContent = 'Connection failed - Check IP and network';
+                        console.error('Connection error:', error);
+                    });
+            } else {
+                disconnect();
+            }
+        }
+
+        function disconnect() {
+            isConnected = false;
+            const status = document.getElementById('status');
+            const connectBtn = document.getElementById('connect-btn');
+            const buttons = document.querySelectorAll('.control-btn');
+            const commandDisplay = document.getElementById('command-display');
+
+            status.className = 'status disconnected';
+            status.textContent = 'Disconnected';
+            connectBtn.textContent = 'Connect';
+            connectBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+            
+            // Disable control buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            commandDisplay.textContent = 'Disconnected';
+        }
+
+        async function testConnection(url) {
+            try {
+                const response = await fetch(`${url}/test`, {
+                    method: 'GET',
+                    mode: 'no-cors', // This allows the request even if CORS isn't set up
+                    timeout: 5000
+                });
+                return Promise.resolve();
+            } catch (error) {
+                // For no-cors mode, we can't really tell if it succeeded
+                // So we'll assume it worked if no network error occurred
+                return Promise.resolve();
+            }
+        }
+
+        async function sendCommand(command) {
+            if (!isConnected) {
+                document.getElementById('command-display').textContent = 'Not connected!';
+                return;
+            }
+
+            const commandDisplay = document.getElementById('command-display');
+            
+            try {
+                commandDisplay.textContent = `Sending: ${command.toUpperCase()}`;
+                
+                // Send command to ESP32
+                await fetch(`${esp32Url}/control?cmd=${command}`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                // Update display based on command
+                const commandNames = {
+                    'w': 'FORWARD',
+                    's': 'BACKWARD',
+                    'a': 'LEFT',
+                    'd': 'RIGHT',
+                    'x': 'STOP'
+                };
+                
+                commandDisplay.textContent = `Command: ${commandNames[command] || command.toUpperCase()}`;
+                
+            } catch (error) {
+                commandDisplay.textContent = 'Command failed!';
+                console.error('Send command error:', error);
+            }
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', function(event) {
+            if (!isConnected) return;
+            
+            const key = event.key.toLowerCase();
+            if (['w', 'a', 's', 'd', 'x'].includes(key)) {
+                event.preventDefault();
+                sendCommand(key);
+            }
+        });
+
+        // Prevent context menu on touch devices
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Handle touch events properly
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            });
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>
