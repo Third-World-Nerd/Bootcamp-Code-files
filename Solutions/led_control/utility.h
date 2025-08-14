@@ -5,8 +5,8 @@
 #include <WebServer.h>
 
 // ===== Wi-Fi Credentials =====
-const char* ssid = "SOYAM_dhfibernet";
-const char* password = "6153@6153";
+const char* ssid = "my_phone";
+const char* password = "12345678";
 
 // ===== Motor Pins =====
 #define PIN_14 14
